@@ -1,4 +1,3 @@
-
 const burenJson = `{
 "customer": {
     "firstname": "bat",
@@ -347,15 +346,32 @@ const danJson = `{
     ]
 }`;
 
-const RESPONSE_MESSAGE = ["Чанаргүй зээлийн түүхтэй", "Сард төлөх нийт зээл орлогоосоо давсан", "Амжилттай"];
-const INTEREST_RATE = [1.014, 1.02]; // Bank, BSB 
+const RESPONSE_MESSAGE = [
+  "Чанаргүй зээлийн түүхтэй",
+  "Сард төлөх нийт зээл орлогоосоо давсан",
+  "Амжилттай",
+];
+const INTEREST_RATE = [1.014, 1.02]; // Bank, BSB
 const TOP4_BANK = ["Хаан банк", "Голомт банк", "ХХБ", "Төрийн банк"];
 const LAST_MONTH_SALARY = 3;
 
-
 const AGE_BONUS_TRESHOLD = 23;
 const PHONE_BONUS_A = ["8888", "9911", "8811"];
-const PHONE_BONUS_B = ["9900", "9901", "9902", "9903", "9904", "9905", "9906", "9907", "9908", "9909", "9910", "9917", "9919"];
+const PHONE_BONUS_B = [
+  "9900",
+  "9901",
+  "9902",
+  "9903",
+  "9904",
+  "9905",
+  "9906",
+  "9907",
+  "9908",
+  "9909",
+  "9910",
+  "9917",
+  "9919",
+];
 const BONUS_AMOUNT = [150000, 200000, 250000, 300000];
 
 const LOAN_K = [0.0, 0.6, 0.7, 0.8, 1.0];
@@ -363,209 +379,222 @@ const LIVING_COST = 0.7;
 
 // Бонус оноо тооцох функц
 function calcBonusPoint(registerNo, phoneNo, top4, rpHistory) {
-    genderBonus = 0;
-    ageBonus = 0;
-    phoneBonus = 0;
-    top4Bonus = 0;
-    rpBonus = 0;
+  genderBonus = 0;
+  ageBonus = 0;
+  phoneBonus = 0;
+  top4Bonus = 0;
+  rpBonus = 0;
 
-    // calc gender bonus
-    gender = registerNo.charAt(8);
-    if (parseInt(gender, 10) % 2 == 0) {
-        genderBonus = 1;
+  // calc gender bonus
+  gender = registerNo.charAt(8);
+  if (parseInt(gender, 10) % 2 == 0) {
+    genderBonus = 1;
+  }
+
+  // calc age bonus
+  bDayStr = registerNo.slice(2, 8);
+  if (parseInt(bDayStr.slice(0, 2), 10) < 10) {
+    m = bDayStr.slice(2, 3);
+    month = "0";
+    if (m == "3") {
+      month = "1";
     }
+    month = month + bDayStr.slice(3, 4);
+    bDayStr =
+      "20" + bDayStr.slice(0, 2) + "-" + month + "-" + bDayStr.slice(4, 6);
+  } else {
+    bDayStr =
+      "19" +
+      bDayStr.slice(0, 2) +
+      "-" +
+      bDayStr.slice(2, 4) +
+      "-" +
+      bDayStr.slice(4, 6);
+  }
 
-    // calc age bonus
-    bDayStr = registerNo.slice(2, 8);
-    if (parseInt(bDayStr.slice(0, 2), 10) < 10) {
-        m = bDayStr.slice(2, 3);
-        month = '0';
-        if (m == '3') {
-            month = '1';
-        }
-        month = month + bDayStr.slice(3, 4);
-        bDayStr = "20" + bDayStr.slice(0, 2) + "-" + month + "-" + bDayStr.slice(4, 6);
-    } else {
-        bDayStr = "19" + bDayStr.slice(0, 2) + "-" + bDayStr.slice(2, 4) + "-" + bDayStr.slice(4, 6);
-    };
+  birthDate = new Date(bDayStr);
+  today = new Date();
+  age = today.getFullYear() - birthDate.getFullYear();
+  mDif = today.getMonth() - birthDate.getMonth();
+  if (mDif < 0 || (mDif === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  if (age >= AGE_BONUS_TRESHOLD) {
+    ageBonus = 1;
+  }
 
-    birthDate = new Date(bDayStr);
-    today = new Date();
-    age = today.getFullYear() - birthDate.getFullYear();
-    mDif = today.getMonth() - birthDate.getMonth();
-    if (mDif < 0 || (mDif === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    if (age >= AGE_BONUS_TRESHOLD) {
-        ageBonus = 1;
-    }
+  //calc phone bonus
+  if (PHONE_BONUS_A.indexOf(phoneNo.slice(0, 4)) > -1) {
+    phoneBonus = 2;
+  } else if (PHONE_BONUS_B.indexOf(phoneNo.slice(0, 4)) > -1) {
+    phoneBonus = 1;
+  }
 
-    //calc phone bonus
-    if (PHONE_BONUS_A.indexOf(phoneNo.slice(0, 4)) > -1) {
-        phoneBonus = 2;
-    } else if (PHONE_BONUS_B.indexOf(phoneNo.slice(0, 4)) > -1) {
-        phoneBonus = 1;
-    }
+  //calc top4 bonus
+  if (top4) {
+    top4Bonus = 2;
+  }
 
-    //calc top4 bonus
-    if (top4) {
-        top4Bonus = 2;
-    }
+  //calc rentpay history bonus
+  if (rpHistory) {
+    rpBonus = 2;
+  }
 
-    //calc rentpay history bonus
-    if (rpHistory) {
-        rpBonus = 2;
-    }
+  res = [genderBonus, ageBonus, phoneBonus, top4Bonus, rpBonus];
 
-    res = [genderBonus, ageBonus, phoneBonus, top4Bonus, rpBonus];
-
-    return res;
+  return res;
 }
 
 //Бонус оноонд харгалзах мөнгөн дүн тооцох функц
 function calcBonusAmount(bonusPoint) {
-    totalBonus = bonusPoint.reduce((partialSum, a) => partialSum + a, 0);
+  totalBonus = bonusPoint.reduce((partialSum, a) => partialSum + a, 0);
+  bonusIndex = 0;
+  if (totalBonus <= 4) {
     bonusIndex = 0;
-    if (totalBonus <= 4) {
-        bonusIndex = 0;
-    } else if (totalBonus == 5) {
-        bonusIndex = 1;
-    } else if (totalBonus == 6) {
-        bonusIndex = 2;
-    } else {
-        bonusIndex = 3;
-    }
-    return BONUS_AMOUNT[bonusIndex];
+  } else if (totalBonus == 5) {
+    bonusIndex = 1;
+  } else if (totalBonus == 6) {
+    bonusIndex = 2;
+  } else {
+    bonusIndex = 3;
+  }
+  return BONUS_AMOUNT[bonusIndex];
 }
-
 
 //Хэвийн бус зээл шалгаж үржих коэффициент тооцох функц
 function calcKIndex(data) {
-    K_INDEX = 4;
-    RES_MSG_INDEX = 2;
+  K_INDEX = 4;
+  RES_MSG_INDEX = 2;
 
-    for (i = 0; i < data.length; i++) {
-        if (data[i]["LOANTYPE"] == 'Зээл' || data[i]["LOANTYPE"] == 'Зээлийн шугам') {
-            if (data[i]["LOANCLASS"] != 'Хэвийн') {
-                if (data[i]["BALANCE"] > 0) {
-                    K_INDEX = 0;
-                    RES_MSG_INDEX = 0;
-                    break;
-                } else {
-                    paidDate = new Date(data[i]["PAID_DATE"]);
-                    today = new Date();
-                    duration = today.getFullYear() - paidDate.getFullYear();
-                    if (duration <= 3) {
-                        K_INDEX = 0;
-                        RES_MSG_INDEX = 0;
-                        break;
-                    } else if (duration == 4) {
-                        K_INDEX = Math.min(1, K_INDEX);
-                    } else if (duration == 5) {
-                        K_INDEX = Math.min(2, K_INDEX);
-                    } else if (duration == 6) {
-                        K_INDEX = Math.min(3, K_INDEX);
-                    }
-                }
-            }
+  for (i = 0; i < data.length; i++) {
+    if (
+      data[i]["LOANTYPE"] == "Зээл" ||
+      data[i]["LOANTYPE"] == "Зээлийн шугам"
+    ) {
+      if (data[i]["LOANCLASS"] != "Хэвийн") {
+        if (data[i]["BALANCE"] > 0) {
+          K_INDEX = 0;
+          RES_MSG_INDEX = 0;
+          break;
+        } else {
+          paidDate = new Date(data[i]["PAID_DATE"]);
+          today = new Date();
+          duration = today.getFullYear() - paidDate.getFullYear();
+          if (duration <= 3) {
+            K_INDEX = 0;
+            RES_MSG_INDEX = 0;
+            break;
+          } else if (duration == 4) {
+            K_INDEX = Math.min(1, K_INDEX);
+          } else if (duration == 5) {
+            K_INDEX = Math.min(2, K_INDEX);
+          } else if (duration == 6) {
+            K_INDEX = Math.min(3, K_INDEX);
+          } else {
+            K_INDEX = Math.min(4, K_INDEX);
+          }
         }
+      }
     }
+  }
 
-    return [K_INDEX, RES_MSG_INDEX];
+  return [K_INDEX, RES_MSG_INDEX];
 }
 
 //Зээлэндээ сард төлж буй нийт дүнг тооцох функц
 function calcLoanAmount(data) {
-    amount = 0;
-    top4 = false;
-    for (i = 0; i < data.length; i++) {
-        if (data[i]["LOANTYPE"] == 'Зээл' && data[i]["PAID_DATE"] == null) {
-            intIndex = 1; //Bank bus sariin huu
-            expDate = new Date(data[i]["EXPDATE"]);
-            today = new Date();
-            if (today < expDate) {
-                yDif = expDate.getFullYear() - today.getFullYear();
-                mDif = expDate.getMonth() - today.getMonth();
-                remMonth = yDif * 12 + mDif;
-                //console.log(expDate + " " + remMonth);
-                amount += data[i]["BALANCE"] / remMonth * INTEREST_RATE[intIndex];
-            }
-        }
-
-        if (data[i]["LOANTYPE"] == 'Зээл' && TOP4_BANK.indexOf(data[i]["ORGNAME"]) > -1) {
-            top4 = true;
-        }
+  amount = 0;
+  top4 = false;
+  for (i = 0; i < data.length; i++) {
+    if (data[i]["LOANTYPE"] == "Зээл" && data[i]["PAID_DATE"] == null) {
+      intIndex = 1; //Bank bus sariin huu
+      expDate = new Date(data[i]["EXPDATE"]);
+      today = new Date();
+      if (today < expDate) {
+        yDif = expDate.getFullYear() - today.getFullYear();
+        mDif = expDate.getMonth() - today.getMonth();
+        remMonth = yDif * 12 + mDif;
+        //console.log(expDate + " " + remMonth);
+        amount += (data[i]["BALANCE"] / remMonth) * INTEREST_RATE[intIndex];
+      }
     }
-    return [Math.ceil(amount), top4];
+
+    if (
+      data[i]["LOANTYPE"] == "Зээл" &&
+      TOP4_BANK.indexOf(data[i]["ORGNAME"]) > -1
+    ) {
+      top4 = true;
+    }
+  }
+  return [Math.ceil(amount), top4];
 }
 
 //Сарын цэвэр орлого тооцох функц
 function calcNetIncome(data) {
-    netSalary = 0;
+  netSalary = 0;
 
-    today = new Date();
-    ty = today.getFullYear();
-    tm = today.getMonth();
+  today = new Date();
+  ty = today.getFullYear();
+  tm = today.getMonth();
 
-    lm_year = new Array(LAST_MONTH_SALARY);
-    lm_month = new Array(LAST_MONTH_SALARY);
+  lm_year = new Array(LAST_MONTH_SALARY);
+  lm_month = new Array(LAST_MONTH_SALARY);
 
-    //Сүүлийн LAST_MONTH_SALARY сарыг онтой нь хамт тооцох давталт, JS дээр сар 1-с биш, 0-с эхэлдэг
-    for (i = 0; i < LAST_MONTH_SALARY; i++) {
-        if (tm - (i + 1) < 0) {
-            lm_month[i] = tm - i + 12;
-            lm_year[i] = ty - 1;
-        } else {
-            lm_month[i] = tm - i;
-            lm_year[i] = ty;
-        }
+  //Сүүлийн LAST_MONTH_SALARY сарыг онтой нь хамт тооцох давталт, JS дээр сар 1-с биш, 0-с эхэлдэг
+  for (i = 0; i < LAST_MONTH_SALARY; i++) {
+    if (tm - (i + 1) < 0) {
+      lm_month[i] = tm - i + 12;
+      lm_year[i] = ty - 1;
+    } else {
+      lm_month[i] = tm - i;
+      lm_year[i] = ty;
     }
+  }
 
-    console.log(lm_month);
-    console.log(lm_year);
+  console.log(lm_month);
+  console.log(lm_year);
 
-    for (i = 0; i < data.length; i++) {
-        for (j = 0; j < LAST_MONTH_SALARY; j++) {
-            if (data[i]["year"] == lm_year[j] && data[i]["month"] == lm_month[j]) {
-                netSalary += data[i]["salaryAmount"] - data[i]["salaryFee"];
-                break;
-            }
-        }
+  for (i = 0; i < data.length; i++) {
+    for (j = 0; j < LAST_MONTH_SALARY; j++) {
+      if (data[i]["year"] == lm_year[j] && data[i]["month"] == lm_month[j]) {
+        netSalary += data[i]["salaryAmount"] - data[i]["salaryFee"];
+        break;
+      }
     }
+  }
 
-    return Math.ceil((netSalary / LAST_MONTH_SALARY) * LIVING_COST);
+  return Math.ceil((netSalary / LAST_MONTH_SALARY) * LIVING_COST);
 }
 
 //Хэрэглэгчийн эрх тооцох функц
 //Оролт: Регистрийн дугаар, утасны дугаар, РП түүхтэй эсэх, Бүрэн дата, Дан дата
 //Гаралт: Рэнтпэй тогтоосон эрх - Мөнгөн дүн
 function calc(registerNo, phoneNo, rpHistory, buren, ndsh) {
-    KI = calcKIndex(buren);
+  KI = calcKIndex(buren);
 
-    if (KI[1] == 0) {
-        console.log(RESPONSE_MESSAGE[0]);
-        return 0;
-    }
+  if (KI[1] == 0) {
+    console.log(RESPONSE_MESSAGE[0]);
+    return 0;
+  }
 
-    A = calcLoanAmount(buren);
-    B = calcNetIncome(ndsh);
+  A = calcLoanAmount(buren);
+  B = calcNetIncome(ndsh);
 
-    if (B - A[0] < 0) {
-        console.log(RESPONSE_MESSAGE[1]);
-        return 0;
-    }
+  if (B - A[0] < 0) {
+    console.log(RESPONSE_MESSAGE[1]);
+    return 0;
+  }
 
-    T1 = (B - A[0]) * LOAN_K[KI[0]];
+  T1 = (B - A[0]) * LOAN_K[KI[0]];
 
-    bonusPoint = calcBonusPoint(registerNo, phoneNo, A[1], rpHistory);
-    T2 = calcBonusAmount(bonusPoint);
+  bonusPoint = calcBonusPoint(registerNo, phoneNo, A[1], rpHistory);
+  T2 = calcBonusAmount(bonusPoint);
 
-    //console.log(A[0] + " " + B + " " + T1 + " " + T2);
-    console.log(RESPONSE_MESSAGE[2]);
+  //console.log(A[0] + " " + B + " " + T1 + " " + T2);
+  console.log(RESPONSE_MESSAGE[2]);
 
-    return Math.ceil(T1 + T2);
+  return Math.ceil(T1 + T2);
 }
-
 
 //Бүрэнгээс ирэх ЗМС-ийн дата
 obj = JSON.parse(burenJson);
@@ -575,12 +604,8 @@ buren = obj["inquiry"];
 obj = JSON.parse(danJson);
 ndsh = obj["list"];
 
-
 p1 = calc("ПД88040279", "99270101", false, buren, ndsh);
 console.log(p1);
 
 p2 = calc("АД01240484", "88110101", true, buren, ndsh);
 console.log(p2);
-
-
-
