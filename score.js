@@ -350,13 +350,14 @@ const RESPONSE_MESSAGE = [
   "Чанаргүй зээлийн түүхтэй",
   "Сард төлөх нийт зээл орлогоосоо давсан",
   "Амжилттай",
-];
-const INTEREST_RATE = [1.014, 1.02]; // Bank, BSB
-const TOP4_BANK = ["Хаан банк", "Голомт банк", "ХХБ", "Төрийн банк"];
-const LAST_MONTH_SALARY = 3;
+]; //Системээс буцаах мессеж
 
-const AGE_BONUS_TRESHOLD = 23;
-const PHONE_BONUS_A = ["8888", "9911", "8811"];
+const INTEREST_RATE = 1.02; // Зээлийн сарын дундаж хүү болох 2%
+const TOP4_BANK = ["Хаан банк", "Голомт банк", "ХХБ", "Төрийн банк"]; // Энэ 4 нэр яг ийм фоматаар ирэхгүй болов уу, ирсэн өгөгдлийг харж байгаад зөв болгоорой
+const LAST_MONTH_SALARY = 3; // Сарын дундаж цалинг бодохдоо сүүлийн хэдэн сарын НДШ ашиглах вэ гэсэн үг
+
+const AGE_BONUS_TRESHOLD = 23; //Бонус оноо тооцох насны босго
+const PHONE_BONUS_A = ["8888", "9911", "8811"]; //2 оноо авах утасны дугаарууд
 const PHONE_BONUS_B = [
   "9900",
   "9901",
@@ -371,27 +372,29 @@ const PHONE_BONUS_B = [
   "9910",
   "9917",
   "9919",
-];
-const BONUS_AMOUNT = [150000, 200000, 250000, 300000];
+]; // 1 оноо авах утасны дугаарууд
 
-const LOAN_K = [0.0, 0.6, 0.7, 0.8, 1.0];
-const LIVING_COST = 0.7;
+const POINT_PER_PAYMENT = 0.2; // Нэг амжилттай түрээс төлөлтөд харгалзах оноо
+const BONUS_PER_POINT = 50000; // Нэг бонус оноонд харгалзах мөнгөн дүн
+
+const LOAN_K = [0.0, 0.6, 0.7, 0.8, 1.0]; // Зээлийн муу түүхэнд харгалзах үржүүлэх коэффициент
+const LIVING_COST = 0.7; // Сарын гар дээр авдаг цалингаас амжиргааны зардал хасах хувь - 30%
 
 // Бонус оноо тооцох функц
-function calcBonusPoint(registerNo, phoneNo, top4, rpHistory) {
+function calcBonusPoint(registerNo, phoneNo, top4, rentpayCount) {
   genderBonus = 0;
   ageBonus = 0;
   phoneBonus = 0;
   top4Bonus = 0;
   rpBonus = 0;
 
-  // calc gender bonus
+  // Хүйсэнд оноо тооцох
   gender = registerNo.charAt(8);
   if (parseInt(gender, 10) % 2 == 0) {
     genderBonus = 1;
   }
 
-  // calc age bonus
+  // Насанд оноо тооцох
   bDayStr = registerNo.slice(2, 8);
   if (parseInt(bDayStr.slice(0, 2), 10) < 10) {
     m = bDayStr.slice(2, 3);
@@ -423,22 +426,20 @@ function calcBonusPoint(registerNo, phoneNo, top4, rpHistory) {
     ageBonus = 1;
   }
 
-  //calc phone bonus
+  //Утасны дугаарт оноо тооцох
   if (PHONE_BONUS_A.indexOf(phoneNo.slice(0, 4)) > -1) {
     phoneBonus = 2;
   } else if (PHONE_BONUS_B.indexOf(phoneNo.slice(0, 4)) > -1) {
     phoneBonus = 1;
   }
 
-  //calc top4 bonus
+  //Топ 4 банкнаас зээлдэгчид оноо тооцох
   if (top4) {
     top4Bonus = 2;
   }
 
-  //calc rentpay history bonus
-  if (rpHistory) {
-    rpBonus = 2;
-  }
+  //Рэнтпэй-ийн хэрэглэгчийн түрээс амжилттай төлсөн тоонд оноо тооцох
+  rpBonus = Math.min(4.0, rentpayCount * POINT_PER_PAYMENT); //Энэ бонус оноо хамгийн ихдээ 4 байна
 
   res = [genderBonus, ageBonus, phoneBonus, top4Bonus, rpBonus];
 
@@ -448,20 +449,10 @@ function calcBonusPoint(registerNo, phoneNo, top4, rpHistory) {
 //Бонус оноонд харгалзах мөнгөн дүн тооцох функц
 function calcBonusAmount(bonusPoint) {
   totalBonus = bonusPoint.reduce((partialSum, a) => partialSum + a, 0);
-  bonusIndex = 0;
-  if (totalBonus <= 4) {
-    bonusIndex = 0;
-  } else if (totalBonus == 5) {
-    bonusIndex = 1;
-  } else if (totalBonus == 6) {
-    bonusIndex = 2;
-  } else {
-    bonusIndex = 3;
-  }
-  return BONUS_AMOUNT[bonusIndex];
+  return BONUS_PER_POINT * totalBonus;
 }
 
-//Хэвийн бус зээл шалгаж үржих коэффициент тооцох функц
+//Муу зээлийн түүхэнд харгалзах үржих коэффициент тооцох функц
 function calcKIndex(data) {
   K_INDEX = 4;
   RES_MSG_INDEX = 2;
@@ -515,7 +506,7 @@ function calcLoanAmount(data) {
         mDif = expDate.getMonth() - today.getMonth();
         remMonth = yDif * 12 + mDif;
         //console.log(expDate + " " + remMonth);
-        amount += (data[i]["BALANCE"] / remMonth) * INTEREST_RATE[intIndex];
+        amount += (data[i]["BALANCE"] * INTEREST_RATE) / remMonth;
       }
     }
 
@@ -551,8 +542,8 @@ function calcNetIncome(data) {
     }
   }
 
-  console.log(lm_month);
-  console.log(lm_year);
+  //console.log(lm_month);
+  //console.log(lm_year);
 
   for (i = 0; i < data.length; i++) {
     for (j = 0; j < LAST_MONTH_SALARY; j++) {
@@ -566,34 +557,39 @@ function calcNetIncome(data) {
   return Math.ceil((netSalary / LAST_MONTH_SALARY) * LIVING_COST);
 }
 
-//Хэрэглэгчийн эрх тооцох функц
-//Оролт: Регистрийн дугаар, утасны дугаар, РП түүхтэй эсэх, Бүрэн дата, Дан дата
-//Гаралт: Рэнтпэй тогтоосон эрх - Мөнгөн дүн
-function calc(registerNo, phoneNo, rpHistory, buren, ndsh) {
-  KI = calcKIndex(buren);
+/*Хэрэглэгчийн эрх үндсэн тооцох функц
+Оролт
+-----------------
+registerNo: Хэрэглэгчийн регистрийн дугаар
+phoneNo: Хэрэглэгчийн утасны дугаар,
+rentpayCount: Манайхаар байр түрээслэхдээ сарын түрээс амжилттай (алдангигүйгээр) төлсөн тоо
+buren: Burenscore-с ирж буй JSON
+ndsh: Дан-с ирж буй НДШ-ийн JSON
 
-  if (KI[1] == 0) {
-    console.log(RESPONSE_MESSAGE[0]);
-    return 0;
+Гаралт
+-----------------
+Манайхаас тогтоосон эрх - Мөнгөн дүн
+*/
+function calcMain(registerNo, phoneNo, rentpayCount, buren, ndsh) {
+  C = calcKIndex(buren);
+
+  if (C[1] == 0) {
+    return [0, RESPONSE_MESSAGE[0]];
   }
 
-  A = calcLoanAmount(buren);
-  B = calcNetIncome(ndsh);
+  A = calcNetIncome(ndsh);
+  B = calcLoanAmount(buren);
 
-  if (B - A[0] < 0) {
-    console.log(RESPONSE_MESSAGE[1]);
-    return 0;
+  if (A - B[0] < 0) {
+    return [0, RESPONSE_MESSAGE[1]];
   }
 
-  T1 = (B - A[0]) * LOAN_K[KI[0]];
+  D = calcBonusPoint(registerNo, phoneNo, B[1], rentpayCount);
+  E = calcBonusAmount(D);
 
-  bonusPoint = calcBonusPoint(registerNo, phoneNo, A[1], rpHistory);
-  T2 = calcBonusAmount(bonusPoint);
+  T = (A - B[0]) * LOAN_K[C[0]] + E;
 
-  //console.log(A[0] + " " + B + " " + T1 + " " + T2);
-  console.log(RESPONSE_MESSAGE[2]);
-
-  return Math.ceil(T1 + T2);
+  return [Math.ceil(T), RESPONSE_MESSAGE[2]];
 }
 
 //Бүрэнгээс ирэх ЗМС-ийн дата
@@ -604,8 +600,10 @@ buren = obj["inquiry"];
 obj = JSON.parse(danJson);
 ndsh = obj["list"];
 
-p1 = calc("ПД88040279", "99270101", false, buren, ndsh);
+//Жишээ хүн 1
+p1 = calcMain("ПД88040279", "99270101", 3, buren, ndsh);
 console.log(p1);
 
-p2 = calc("АД01240484", "88110101", true, buren, ndsh);
+//Жишээ хүн 2
+p2 = calcMain("АД01240484", "88110101", 0, buren, ndsh);
 console.log(p2);
