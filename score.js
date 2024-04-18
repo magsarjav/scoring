@@ -557,7 +557,7 @@ function calcNetIncome(data) {
   return Math.ceil((netSalary / LAST_MONTH_SALARY) * LIVING_COST);
 }
 
-/*Хэрэглэгчийн эрх үндсэн тооцох функц
+/*Хэрэглэгчийн эрх тооцох үндсэн функц
 Оролт
 -----------------
 registerNo: Хэрэглэгчийн регистрийн дугаар
