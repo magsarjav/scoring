@@ -352,7 +352,7 @@ const RESPONSE_MESSAGE = [
   "Амжилттай",
 ]; //Системээс буцаах мессеж
 
-const INTEREST_RATE = 1.02; // Зээлийн сарын дундаж хүү болох 2%
+const INTEREST_RATE = 0.02; // Зээлийн сарын дундаж хүү болох 2%
 const TOP4_BANK = ["Хаан банк", "Голомт банк", "ХХБ", "Төрийн банк"]; // Энэ 4 нэр яг ийм фоматаар ирэхгүй болов уу, ирсэн өгөгдлийг харж байгаад зөв болгоорой
 const LAST_MONTH_SALARY = 3; // Сарын дундаж цалинг бодохдоо сүүлийн хэдэн сарын НДШ ашиглах вэ гэсэн үг
 
@@ -498,7 +498,6 @@ function calcLoanAmount(data) {
   top4 = false;
   for (i = 0; i < data.length; i++) {
     if (data[i]["LOANTYPE"] == "Зээл" && data[i]["PAID_DATE"] == null) {
-      intIndex = 1; //Bank bus sariin huu
       expDate = new Date(data[i]["EXPDATE"]);
       today = new Date();
       if (today < expDate) {
@@ -506,7 +505,9 @@ function calcLoanAmount(data) {
         mDif = expDate.getMonth() - today.getMonth();
         remMonth = yDif * 12 + mDif;
         //console.log(expDate + " " + remMonth);
-        amount += (data[i]["BALANCE"] * INTEREST_RATE) / remMonth;
+        amount +=
+          (data[i]["BALANCE"] + data[i]["BALANCE"] * INTEREST_RATE * remMonth) /
+          remMonth;
       }
     }
 
@@ -569,6 +570,7 @@ ndsh: Дан-с ирж буй НДШ-ийн JSON
 Гаралт
 -----------------
 Манайхаас тогтоосон эрх - Мөнгөн дүн
+Системээс буцаах мессеж - Текст
 */
 function calcMain(registerNo, phoneNo, rentpayCount, buren, ndsh) {
   C = calcKIndex(buren);
