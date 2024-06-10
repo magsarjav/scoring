@@ -424,7 +424,7 @@ function calcNetIncome(data) {
     today = new Date();
     ty = today.getFullYear();
     tm = today.getMonth();
-    td = 5;//today.getDate();
+    td = today.getDate();
 
     lm_year = new Array(LAST_MONTH_SALARY);
     lm_month = new Array(LAST_MONTH_SALARY);
