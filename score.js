@@ -403,7 +403,9 @@ function calcLoanAmount(data) {
             mDif = expDate.getMonth() - startDate.getMonth();
             remMonth = yDif * 12 + mDif;
             //console.log(remMonth + " " + startDate + " " + expDate);
-            amount += data[i]["ADVAMOUNT"] * (1 + INTEREST_RATE * remMonth) / remMonth;
+            if (remMonth > 0) {
+                amount += data[i]["ADVAMOUNT"] * (1 + INTEREST_RATE * remMonth) / remMonth;
+            }
 
         }
 
